@@ -36,7 +36,7 @@ fi
 
 # Rotate
 /usr/local/bin/rot -o "$TARGETDIR" -s '.sql.gz' "$TMP" > >(systemd-cat -p "info" -t "$LOG") 2>&1
-result=${PIPESTATUS[1]}
+result=$?
 if [[ $result -ne 0 ]]; then
 	echo "Backup failed: rot exited with code $result" | systemd-cat -p "crit" -t "$LOG"
 	exit $result

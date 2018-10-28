@@ -29,10 +29,10 @@ mkdir -p "$TARGETDIR"
 # Backup
 ssh "$SSH_HOST" \
 	docker exec -i "$DOCKER_CONTAINER" \
-	"mysqldump --all-databases -u'$MYSQL_USERNAME' -p'$MYSQL_PASSWORD | gzip'" \
+	"mysqldump --all-databases -u'$MYSQL_USERNAME' -p'$MYSQL_PASSWORD | gzip'; exit \${PIPESTATUS[1]}" \
 	> "$TMP" \
 	2> >( systemd-cat -p "info" -t "$LOG" )
-result=${PIPESTATUS[1]}
+result=$?
 if [[ $result -ne 0 ]]; then
 	echo "Backup failed: mysqldump exited with code $result" | systemd-cat -p "crit" -t "$LOG"
 	exit $result
@@ -40,7 +40,7 @@ fi
 
 # Rotate
 /usr/local/bin/rot -o "$TARGETDIR" -s '.sql.gz' "$TMP" > >(systemd-cat -p "info" -t "$LOG") 2>&1
-result=${PIPESTATUS[1]}
+result=$?
 if [[ $result -ne 0 ]]; then
 	echo "Backup failed: rot exited with code $result" | systemd-cat -p "crit" -t "$LOG"
 	exit $result
