@@ -9,9 +9,8 @@ printusage () {
 	echo ''
 	echo 'Creates a file-wise back-up of the entire source directory at the given'
 	echo 'destination. The back-up is created using hard links, so that the back-up is a'
-	echo 'full back-up (independent from other back-ups), but creates a hard link to a'
-	echo 'file if it already exists in another back-up. That way, no redundant copying'
-	echo 'is made.'
+	echo 'full back-up (independent from other back-ups), but maintains a link to a file'
+	echo 'that already exists in another back-up, so that it does not need to be copied.'
 	echo 'The source directory and its contents will be linked to a newly created'
 	echo 'directory in $DESTINATION that is named after the current date by default,'
 	echo 'in YYYY-MM-DD format. The name can be changed with the --name option.'
@@ -101,7 +100,7 @@ fi
 # Step 4: back up
 # ----------------------------------------------------------------
 
-rsync -aR --stats --rsh=ssh "${EXCLUDES[@]}" --delete "$SOURCE" "$DESTINATION/$NAME/" --link-dest="$DESTINATION/last/" >&2
+rsync -aRH --numeric-ids --stats --rsh=ssh "${EXCLUDES[@]}" --delete "$SOURCE" "$DESTINATION/$NAME/" --link-dest="$DESTINATION/last/" >&2
 result=$?
 
 if [[ $result -ne 0 ]]; then
