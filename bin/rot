@@ -228,9 +228,15 @@ rm_and_debug () {
 	rm -r "$1"
 }
 
-[[ DISABLE_DAILY_DELETE -eq 0 ]] && (cd $OUT_DIR_DAILY; ls | sort -r | tail -n +$((KEEP_DAYS+1)) | xargs -r rm_and_debug)
-[[ DISABLE_WEEKLY_DELETE -eq 0 ]] && (cd $OUT_DIR_WEEKLY; ls | sort -r | tail -n +$((KEEP_WEEKS+1)) | xargs -r rm_and_debug)
-[[ DISABLE_MONTHLY_DELETE -eq 0 ]] && (cd $OUT_DIR_MONTHLY; ls | sort -r | tail -n +$((KEEP_MONTHS+1)) | xargs -r rm_and_debug)
-[[ DISABLE_YEARLY_DELETE -eq 0 ]] && (cd $OUT_DIR_YEARLY; ls | sort -r | tail -n +$((KEEP_YEARS+1)) | xargs -r rm_and_debug)
+rm_and_debug_many () {
+	while read path; do
+		rm_and_debug "$path"
+	done
+}
+
+[[ DISABLE_DAILY_DELETE -eq 0 ]] && (find "$OUT_DIR_DAILY" -maxdepth 1 -mindepth 1 -type d | sort -r | tail -n +$((KEEP_DAYS+1)) | rm_and_debug_many)
+[[ DISABLE_WEEKLY_DELETE -eq 0 ]] && (find "$OUT_DIR_WEEKLY" -maxdepth 1 -mindepth 1 -type d | sort -r | tail -n +$((KEEP_WEEKS+1)) | rm_and_debug_many)
+[[ DISABLE_MONTHLY_DELETE -eq 0 ]] && (find "$OUT_DIR_MONTHLY" -maxdepth 1 -mindepth 1 -type d | sort -r | tail -n +$((KEEP_MONTHS+1)) | rm_and_debug_many)
+[[ DISABLE_YEARLY_DELETE -eq 0 ]] && (find "$OUT_DIR_YEARLY" -maxdepth 1 -mindepth 1 -type d | sort -r | tail -n +$((KEEP_YEARS+1)) | rm_and_debug_many)
 
 exit 0
