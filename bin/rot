@@ -190,6 +190,13 @@ DISABLE_MONTHLY_DELETE=${DISABLE_MONTHLY_DELETE-0}
 DISABLE_YEARLY_DELETE=${DISABLE_YEARLY_DELETE-0}
 NOW=${NOW-now}
 
+# Speed optimization: when we don't intend to keep any daily/weekly/monthly/yearly copies
+# then don't create them in the first place (they will be deleted anyway).
+if (( KEEP_DAYS <= 0 )); then DISABLE_DAILY_CREATE=1; fi
+if (( KEEP_WEEKS <= 0 )); then DISABLE_WEEKLY_CREATE=1; fi
+if (( KEEP_MONTHS <= 0 )); then DISABLE_MONTHLY_CREATE=1; fi
+if (( KEEP_YEARS <= 0 )); then DISABLE_YEARLY_CREATE=1; fi
+
 # ----------------------------------------------------------------
 # Step 3: prepare environment
 # ----------------------------------------------------------------
