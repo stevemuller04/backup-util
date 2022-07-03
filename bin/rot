@@ -210,33 +210,24 @@ try_cp () {
 		debug "Not copying $1 to $2: destination exists"
 	else
 		debug "Copy $1 to $2"
-	 	cp -al "$1" "$2" >&2
-	 fi
+		cp -al "$1" "$2" >&2
+	fi
 }
 
-[[ DISABLE_DAILY_CREATE -eq 0 ]] && try_cp "$IN_FILE" "$OUT_DIR_DAILY/$OUT_PREFIX$(date --date="$NOW" +%Y-%m-%d)$OUT_SUFFIX"
-[[ DISABLE_WEEKLY_CREATE -eq 0 ]] && try_cp "$IN_FILE" "$OUT_DIR_WEEKLY/$OUT_PREFIX$(date --date="$NOW" +%Y-%V)$OUT_SUFFIX"
-[[ DISABLE_MONTHLY_CREATE -eq 0 ]] && try_cp "$IN_FILE" "$OUT_DIR_MONTHLY/$OUT_PREFIX$(date --date="$NOW" +%Y-%m)$OUT_SUFFIX"
-[[ DISABLE_YEARLY_CREATE -eq 0 ]] && try_cp "$IN_FILE" "$OUT_DIR_YEARLY/$OUT_PREFIX$(date --date="$NOW" +%Y)$OUT_SUFFIX"
+result=0
+
+if [[ DISABLE_DAILY_CREATE -eq 0 ]] && ! try_cp "$IN_FILE" "$OUT_DIR_DAILY/$OUT_PREFIX$(date --date="$NOW" +%Y-%m-%d)$OUT_SUFFIX"; then result=1; fi
+if [[ DISABLE_WEEKLY_CREATE -eq 0 ]] && ! try_cp "$IN_FILE" "$OUT_DIR_WEEKLY/$OUT_PREFIX$(date --date="$NOW" +%Y-%V)$OUT_SUFFIX"; then result=1; fi
+if [[ DISABLE_MONTHLY_CREATE -eq 0 ]] && ! try_cp "$IN_FILE" "$OUT_DIR_MONTHLY/$OUT_PREFIX$(date --date="$NOW" +%Y-%m)$OUT_SUFFIX"; then result=1; fi
+if [[ DISABLE_YEARLY_CREATE -eq 0 ]] && ! try_cp "$IN_FILE" "$OUT_DIR_YEARLY/$OUT_PREFIX$(date --date="$NOW" +%Y)$OUT_SUFFIX"; then result=1; fi
 
 # ----------------------------------------------------------------
 # Step 5: delete all old files
 # ----------------------------------------------------------------
 
-rm_and_debug () {
-	debug "Delete $1"
-	rm -r "$1"
-}
+if [[ DISABLE_DAILY_DELETE -eq 0 ]] && ! find "${OUT_DIR_DAILY}/" -maxdepth 1 -mindepth 1 -type d -print0 | sort -zr | tail -z -n +$((KEEP_DAYS+1)) | xargs -0 -r rm -r; then result=1; fi
+if [[ DISABLE_WEEKLY_DELETE -eq 0 ]] && ! find "${OUT_DIR_WEEKLY}/" -maxdepth 1 -mindepth 1 -type d -print0 | sort -zr | tail -z -n +$((KEEP_WEEKS+1)) | xargs -0 -r rm -r; then result=1; fi
+if [[ DISABLE_MONTHLY_DELETE -eq 0 ]] && ! find "${OUT_DIR_MONTHLY}/" -maxdepth 1 -mindepth 1 -type d -print0 | sort -zr | tail -z -n +$((KEEP_MONTHS+1)) | xargs -0 -r rm -r; then result=1; fi
+if [[ DISABLE_YEARLY_DELETE -eq 0 ]] && ! find "${OUT_DIR_YEARLY}/" -maxdepth 1 -mindepth 1 -type d -print0 | sort -zr | tail -z -n +$((KEEP_YEARS+1)) | xargs -0 -r rm -r; then result=1; fi
 
-rm_and_debug_many () {
-	while read path; do
-		rm_and_debug "$path"
-	done
-}
-
-[[ DISABLE_DAILY_DELETE -eq 0 ]] && (find "$OUT_DIR_DAILY" -maxdepth 1 -mindepth 1 -type d | sort -r | tail -n +$((KEEP_DAYS+1)) | rm_and_debug_many)
-[[ DISABLE_WEEKLY_DELETE -eq 0 ]] && (find "$OUT_DIR_WEEKLY" -maxdepth 1 -mindepth 1 -type d | sort -r | tail -n +$((KEEP_WEEKS+1)) | rm_and_debug_many)
-[[ DISABLE_MONTHLY_DELETE -eq 0 ]] && (find "$OUT_DIR_MONTHLY" -maxdepth 1 -mindepth 1 -type d | sort -r | tail -n +$((KEEP_MONTHS+1)) | rm_and_debug_many)
-[[ DISABLE_YEARLY_DELETE -eq 0 ]] && (find "$OUT_DIR_YEARLY" -maxdepth 1 -mindepth 1 -type d | sort -r | tail -n +$((KEEP_YEARS+1)) | rm_and_debug_many)
-
-exit 0
+exit $result
